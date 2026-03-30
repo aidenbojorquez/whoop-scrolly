@@ -1,0 +1,468 @@
+---
+title: "WHOOP Decoded: A Year of Recovery Data"
+format:
+  closeread-html:
+    css: styles.css
+    cr-style:
+      narrative-background-color: "#0d0d0d"
+      narrative-text-color: "#e0e0e0"
+      sticky-background-color: "#111111"
+      narrative-overlay: false
+---
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+library(plotly)
+library(lubridate)
+
+main_df        <- readRDS("data/main_df.rds")
+workouts_clean <- readRDS("data/workouts_clean.rds")
+
+n_days       <- nrow(main_df)
+avg_hrv      <- round(mean(main_df$hrv, na.rm = TRUE))
+avg_recovery <- round(mean(main_df$recovery, na.rm = TRUE))
+n_workouts   <- nrow(workouts_clean)
+date_start   <- format(min(main_df$date), "%B %Y")
+date_end     <- format(max(main_df$date), "%B %Y")
+pct_green    <- round(mean(main_df$recovery_zone == "Green", na.rm = TRUE) * 100)
+
+zone_colors <- c("Red" = "#FF6B6B", "Yellow" = "#FFD166", "Green" = "#00f19f")
+marker_cols <- zone_colors[as.character(main_df$recovery_zone)]
+```
+
+::: hero
+# WHOOP Decoded
+### What does your recovery data actually tell you?
+
+
+::: stats-row
+::: stat-box
+::: number
+`r n_days`
+:::
+::: label
+Days Tracked
+:::
+:::
+
+::: stat-box
+::: number
+`r avg_hrv` ms
+:::
+::: label
+Avg HRV
+:::
+:::
+
+::: stat-box
+::: number
+`r avg_recovery`%
+:::
+::: label
+Avg Recovery
+:::
+:::
+
+::: stat-box
+::: number
+`r pct_green`%
+:::
+::: label
+Days in the Green
+:::
+:::
+
+::: stat-box
+::: number
+`r n_workouts`
+:::
+::: label
+Workouts Logged
+:::
+:::
+:::
+:::
+
+---
+
+:::{.cr-section}
+
+### Chart 1 · Your HRV Over a Year {.cr-narrative}
+
+HRV — heart rate variability is time of variation between heartbeats in milliseconds. A high HRV means your body is calm and ready for excercise. A low HRV means your body is still dealing with stress, hard training, or poor sleep. [@cr-hrv]
+
+::: insight
+**Why it matters:** WHOOP gives you a recovery number, but HRV is the significant figure underneath it. Watching the trend over months reveals your fitness habits.
+:::
+
+Use the **range slider** at the bottom to zoom into any stretch of weeks. Hover any dot to see the full breakdown for that day. [@cr-hrv]
+
+Patterns indicate consistencies or inconsistencies in training and recovery. Dips can be seen after harder training blocks or busier times of the year. Spikes can be seen after rest. [@cr-hrv]
+
+:::{#cr-hrv}
+```{r}
+#| echo: false
+#| warning: false
+
+plot_ly(
+  data   = main_df,
+  x      = ~date,
+  y      = ~hrv,
+  type   = "scatter",
+  mode   = "lines+markers",
+  color  = ~recovery_zone,
+  colors = zone_colors,
+  marker = list(size = 6, opacity = 0.85),
+  line   = list(width = 1.4),
+  text   = ~paste0(
+    "<b>", format(date, "%b %d, %Y"), "</b><br>",
+    "HRV: ", hrv, " ms<br>",
+    "Recovery: ", recovery, "%<br>",
+    "Resting HR: ", rhr, " bpm<br>",
+    "Sleep: ", sleep_perf, "%"
+  ),
+  hoverinfo = "text"
+) |>
+  layout(
+    paper_bgcolor = "#111111",
+    plot_bgcolor  = "#1a1a1a",
+    font  = list(color = "#cccccc"),
+    title = list(
+      text = "HRV Over Time — One Dot Per Day",
+      font = list(size = 16, color = "#ffffff")
+    ),
+    xaxis = list(
+      title      = "",
+      color      = "#888",
+      gridcolor  = "#222",
+      rangeslider = list(visible = TRUE, thickness = 0.06,
+                         bgcolor = "#1a1a1a")
+    ),
+    yaxis = list(
+      title     = "HRV (ms)",
+      color     = "#888",
+      gridcolor = "#222"
+    ),
+    legend = list(
+      title      = list(text = "Zone", font = list(color = "#888")),
+      font       = list(color = "#ccc"),
+      bgcolor    = "#1a1a1a",
+      bordercolor = "#333"
+    ),
+    hovermode = "closest"
+  )
+```
+:::
+
+:::
+
+---
+
+:::{.cr-section}
+
+### Chart 2 · Which sleep metric actually predicts recovery? {.cr-narrative}
+
+WHOOP says sleep drives recovery. But which part of sleep? Total hours? Efficiency? How much deep or REM sleep you got?
+
+Use the dropdown to swap the x-axis between different sleep metrics. A tight upward cluster means that metric predicts your recovery. A scattered blob means it doesn't. [@cr-sleep]
+
+::: insight
+**Common finding:** Sleep performance % and sleep debt tend to be stronger predictors than raw hours — it's not just about quantity.
+:::
+
+Each dot is one day. The color still shows your recovery zone — green dots should cluster toward the top right. [@cr-sleep]
+
+:::{#cr-sleep}
+```{r}
+#| echo: false
+#| warning: false
+
+x_options <- list(
+  "Sleep Performance %" = main_df$sleep_perf,
+  "Sleep Efficiency %"  = main_df$sleep_eff,
+  "Hours Asleep"        = main_df$asleep_hrs,
+  "Deep Sleep %"        = main_df$deep_pct,
+  "REM %"               = main_df$rem_pct,
+  "Sleep Debt (hrs)"    = main_df$sleep_debt_hrs
+)
+x_names <- names(x_options)
+
+sleep_buttons <- lapply(seq_along(x_options), function(i) {
+  list(
+    method = "update",
+    args   = list(
+      list(x = list(x_options[[i]])),
+      list(xaxis = list(title = x_names[i],
+                        color = "#888", gridcolor = "#222"))
+    ),
+    label = x_names[i]
+  )
+})
+
+plot_ly(
+  data      = main_df,
+  x         = ~sleep_perf,
+  y         = ~recovery,
+  type      = "scatter",
+  mode      = "markers",
+  marker    = list(
+    color   = marker_cols,
+    size    = 9,
+    opacity = 0.78,
+    line    = list(width = 0.8, color = "#0d0d0d")
+  ),
+  text = ~paste0(
+    "<b>", format(date, "%b %d, %Y"), "</b><br>",
+    "Sleep Perf: ", sleep_perf, "%<br>",
+    "Recovery: ", recovery, "%<br>",
+    "Hours Asleep: ", round(asleep_hrs, 1), "<br>",
+    "Deep Sleep: ", round(deep_pct, 1), "%<br>",
+    "Sleep Debt: ", round(sleep_debt_hrs, 1), " hrs"
+  ),
+  hoverinfo = "text"
+) |>
+  layout(
+    paper_bgcolor = "#111111",
+    plot_bgcolor  = "#1a1a1a",
+    font  = list(color = "#cccccc"),
+    title = list(
+      text = "Sleep Quality → Next-Day Recovery",
+      font = list(size = 16, color = "#ffffff")
+    ),
+    xaxis = list(title = "Sleep Performance %",
+                 color = "#888", gridcolor = "#222"),
+    yaxis = list(title = "Recovery Score (%)",
+                 color = "#888", gridcolor = "#222"),
+    updatemenus = list(list(
+      buttons    = sleep_buttons,
+      direction  = "down",
+      showactive = TRUE,
+      bgcolor    = "#1a1a1a",
+      bordercolor = "#333",
+      font       = list(color = "#ccc"),
+      x = 0.0, xanchor = "left",
+      y = 1.18, yanchor = "top"
+    )),
+    annotations = list(list(
+      text = "Switch x-axis:",
+      x = 0.0, xref = "paper",
+      y = 1.23, yref = "paper",
+      showarrow = FALSE,
+      font = list(size = 11, color = "#888")
+    ))
+  )
+```
+:::
+
+:::
+
+---
+
+:::{.cr-section}
+
+### Chart 3 · The insight WHOOP never surfaces {.cr-narrative}
+
+Here's what WHOOP doesn't tell you directly: **your HRV that morning predicts how hard a workout will feel.** When HRV is low, your heart beats faster to produce the same output — your "easy" run suddenly feels hard. [@cr-workout]
+
+::: insight
+**What to look for:** A downward trend — higher HRV on the x-axis should mean lower average heart rate on the y-axis. If the pattern holds for you, low-HRV days are days to go easy.
+:::
+
+Use the **activity buttons** to filter by sport. Running and Jiu Jitsu are the most revealing — cardio sports where heart rate directly measures effort. [@cr-workout]
+
+:::{#cr-workout}
+```{r}
+#| echo: false
+#| warning: false
+
+workout_df <- main_df |>
+  filter(!is.na(avg_hr), !is.na(hrv), !is.na(activity_clean))
+
+activities <- sort(unique(workout_df$activity_clean))
+n_acts     <- length(activities)
+
+activity_palette <- c(
+  "Running"          = "#00f19f",
+  "Weightlifting"    = "#FF6B6B",
+  "Powerlifting"     = "#FF9F45",
+  "Jiu Jitsu"        = "#A78BFA",
+  "Walking"          = "#60A5FA",
+  "Basketball"       = "#F472B6",
+  "Dance"            = "#FBBF24",
+  "Cycling"          = "#34D399",
+  "General Activity" = "#94A3B8",
+  "Other"            = "#64748B"
+)
+
+p_workout <- plot_ly()
+
+for (act in activities) {
+  df_act  <- workout_df |> filter(activity_clean == act)
+  act_col <- if (act %in% names(activity_palette))
+               activity_palette[act] else "#94A3B8"
+
+  p_workout <- p_workout |>
+    add_trace(
+      data   = df_act,
+      x      = ~hrv,
+      y      = ~avg_hr,
+      type   = "scatter",
+      mode   = "markers",
+      name   = act,
+      marker = list(size = 10, opacity = 0.78, color = act_col,
+                    line = list(width = 0.5, color = "#0d0d0d")),
+      text   = ~paste0(
+        "<b>", format(date, "%b %d, %Y"), "</b><br>",
+        "Activity: ", activity_clean, "<br>",
+        "HRV: ", hrv, " ms<br>",
+        "Avg HR: ", avg_hr, " bpm<br>",
+        "Strain: ", round(strain, 1), "<br>",
+        "Duration: ", round(duration_min), " min"
+      ),
+      hoverinfo = "text"
+    )
+}
+
+all_btn <- list(
+  method = "restyle",
+  args   = list("visible", as.list(rep(TRUE, n_acts))),
+  label  = "All"
+)
+activity_btns <- lapply(seq_along(activities), function(i) {
+  vis    <- rep(FALSE, n_acts)
+  vis[i] <- TRUE
+  list(method = "restyle",
+       args   = list("visible", as.list(vis)),
+       label  = activities[i])
+})
+
+p_workout |>
+  layout(
+    paper_bgcolor = "#111111",
+    plot_bgcolor  = "#1a1a1a",
+    font  = list(color = "#cccccc"),
+    title = list(
+      text = "Morning HRV vs. Workout Heart Rate",
+      font = list(size = 16, color = "#ffffff")
+    ),
+    xaxis = list(title = "HRV That Morning (ms)",
+                 color = "#888", gridcolor = "#222"),
+    yaxis = list(title = "Avg Workout Heart Rate (bpm)",
+                 color = "#888", gridcolor = "#222"),
+    updatemenus = list(list(
+      type       = "buttons",
+      buttons    = c(list(all_btn), activity_btns),
+      direction  = "right",
+      showactive = TRUE,
+      bgcolor    = "#1a1a1a",
+      bordercolor = "#333",
+      font       = list(color = "#ccc", size = 11),
+      x = 0.0, xanchor = "left",
+      y = 1.14, yanchor = "top"
+    )),
+    legend    = list(font = list(color = "#ccc"),
+                     bgcolor = "#1a1a1a", bordercolor = "#333"),
+    hovermode = "closest"
+  )
+```
+:::
+
+:::
+
+---
+
+:::{.cr-section}
+
+### Chart 4 · Discover Trends {.cr-narrative}
+
+Pick any variable for X and Y — every dot is one day, colored by recovery zone. [@cr-explore]
+
+
+
+:::{#cr-explore}
+```{r}
+#| echo: false
+#| warning: false
+
+explore_vars <- list(
+  "Recovery (%)"          = main_df$recovery,
+  "HRV (ms)"              = main_df$hrv,
+  "Resting HR (bpm)"      = main_df$rhr,
+  "Sleep Performance (%)" = main_df$sleep_perf,
+  "Sleep Efficiency (%)"  = main_df$sleep_eff,
+  "Hours Asleep"          = main_df$asleep_hrs,
+  "Deep Sleep (%)"        = main_df$deep_pct,
+  "REM (%)"               = main_df$rem_pct,
+  "Sleep Debt (hrs)"      = main_df$sleep_debt_hrs,
+  "Day Strain"            = main_df$day_strain,
+  "Resp. Rate (rpm)"      = main_df$resp_rate,
+  "Workout Avg HR (bpm)"  = main_df$avg_hr
+)
+var_names <- names(explore_vars)
+
+make_btns <- function(axis) {
+  lapply(seq_along(explore_vars), function(i) {
+    args <- if (axis == "x")
+      list(list(x = list(explore_vars[[i]])),
+           list(xaxis = list(title = var_names[i],
+                             color = "#888", gridcolor = "#222")))
+    else
+      list(list(y = list(explore_vars[[i]])),
+           list(yaxis = list(title = var_names[i],
+                             color = "#888", gridcolor = "#222")))
+    list(method = "update", args = args, label = var_names[i])
+  })
+}
+
+plot_ly(
+  data      = main_df,
+  x         = ~hrv,
+  y         = ~recovery,
+  type      = "scatter",
+  mode      = "markers",
+  marker    = list(color = marker_cols, size = 9, opacity = 0.75,
+                   line = list(width = 0.8, color = "#0d0d0d")),
+  text      = ~paste0(
+    "<b>", format(date, "%b %d, %Y"), "</b><br>",
+    "Recovery: ", recovery, "%<br>",
+    "HRV: ", hrv, " ms<br>",
+    "Sleep: ", sleep_perf, "%<br>",
+    "Day Strain: ", round(day_strain, 1)
+  ),
+  hoverinfo = "text"
+) |>
+  layout(
+    paper_bgcolor = "#111111",
+    plot_bgcolor  = "#1a1a1a",
+    font  = list(color = "#cccccc"),
+    title = list(
+      text = "Explore Your Data — Pick Any X & Y",
+      font = list(size = 16, color = "#ffffff")
+    ),
+    xaxis = list(title = "HRV (ms)", color = "#888", gridcolor = "#222"),
+    yaxis = list(title = "Recovery (%)", color = "#888", gridcolor = "#222"),
+    updatemenus = list(
+      list(buttons = make_btns("x"), direction = "down",
+           showactive = TRUE, bgcolor = "#1a1a1a",
+           bordercolor = "#333", font = list(color = "#ccc"),
+           x = 0.0, xanchor = "left", y = 1.22, yanchor = "top"),
+      list(buttons = make_btns("y"), direction = "down",
+           showactive = TRUE, bgcolor = "#1a1a1a",
+           bordercolor = "#333", font = list(color = "#ccc"),
+           x = 0.45, xanchor = "left", y = 1.22, yanchor = "top")
+    ),
+    annotations = list(
+      list(text = "X axis:", x = 0.0, xref = "paper",
+           y = 1.27, yref = "paper", showarrow = FALSE,
+           font = list(size = 11, color = "#888")),
+      list(text = "Y axis:", x = 0.45, xref = "paper",
+           y = 1.27, yref = "paper", showarrow = FALSE,
+           font = list(size = 11, color = "#888"))
+    )
+  )
+```
+:::
+
+:::

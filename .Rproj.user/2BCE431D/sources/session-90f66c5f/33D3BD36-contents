@@ -1,0 +1,11 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Whoop Scrolly"
+
+format:
+  html:
+    theme: cosmo
+    toc: false
