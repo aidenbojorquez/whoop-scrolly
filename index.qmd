@@ -466,3 +466,103 @@ plot_ly(
 :::
 
 :::
+
+---
+
+:::{.cr-section}
+
+### Chart 5 · 365 Days at a Glance {.cr-narrative}
+
+Every square is one day. Green means your body was ready. Red means it wasn't. Yellow is in between. [@cr-calendar]
+
+::: insight
+**What to look for:** Streaks of red often follow heavy training blocks or poor sleep weeks. Green clusters usually mean you backed off at the right time.
+:::
+
+Scroll back through the year — patterns in the calendar reveal things the line chart buries. A bad month looks very different from a bad week. Hover any square to see the full breakdown for that day. [@cr-calendar]
+
+:::{#cr-calendar}
+```{r}
+#| echo: false
+#| warning: false
+
+start_week <- floor_date(min(main_df$date), 'week', week_start = 1)
+
+cal_df <- main_df |>
+  mutate(
+    dow        = as.integer(wday(date, week_start = 1)) - 1,
+    week_num   = as.integer(floor(as.numeric(date - start_week) / 7)),
+    zone_color = zone_colors[as.character(recovery_zone)],
+    hover_text = paste0(
+      "<b>", format(date, "%b %d, %Y"), "</b><br>",
+      "Recovery: ", recovery, "%<br>",
+      "Zone: ", as.character(recovery_zone), "<br>",
+      "HRV: ", hrv, " ms<br>",
+      "Resting HR: ", rhr, " bpm"
+    )
+  )
+
+month_ticks <- cal_df |>
+  mutate(month_label = format(date, "%b '%y")) |>
+  group_by(month_label) |>
+  slice_min(date, n = 1) |>
+  ungroup()
+
+plot_ly(
+  data      = cal_df,
+  x         = ~week_num,
+  y         = ~dow,
+  type      = "scatter",
+  mode      = "markers",
+  marker    = list(
+    symbol = "square",
+    size   = 16,
+    color  = ~zone_color,
+    line   = list(width = 2, color = "#0d0d0d")
+  ),
+  text      = ~hover_text,
+  hoverinfo = "text"
+) |>
+  layout(
+    paper_bgcolor = "#111111",
+    plot_bgcolor  = "#111111",
+    font  = list(color = "#cccccc"),
+    title = list(
+      text = "Recovery Calendar — One Square Per Day",
+      font = list(size = 16, color = "#ffffff")
+    ),
+    xaxis = list(
+      title    = "",
+      tickvals = month_ticks$week_num,
+      ticktext = month_ticks$month_label,
+      color    = "#888",
+      showgrid = FALSE,
+      zeroline = FALSE
+    ),
+    yaxis = list(
+      title     = "",
+      tickvals  = 0:6,
+      ticktext  = c("Mon","Tue","Wed","Thu","Fri","Sat","Sun"),
+      color     = "#888",
+      showgrid  = FALSE,
+      zeroline  = FALSE,
+      autorange = "reversed"
+    ),
+    showlegend  = FALSE,
+    hovermode   = "closest",
+    annotations = list(
+      list(text = "■ Green", x = 0.0, xref = "paper",
+           y = -0.15, yref = "paper", showarrow = FALSE,
+           font = list(size = 13, color = "#00f19f")),
+      list(text = "■ Yellow", x = 0.15, xref = "paper",
+           y = -0.15, yref = "paper", showarrow = FALSE,
+           font = list(size = 13, color = "#FFD166")),
+      list(text = "■ Red", x = 0.30, xref = "paper",
+           y = -0.15, yref = "paper", showarrow = FALSE,
+           font = list(size = 13, color = "#FF6B6B"))
+    )
+  )
+```
+:::
+
+:::

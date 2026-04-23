@@ -4,14 +4,12 @@ body {
   color: #f0f0f0 !important;
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
 }
-
 /* ── Hero section ──────────────────────────────────────── */
 .hero {
   background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%);
   padding: 80px 60px 60px 60px;
   border-bottom: 1px solid #222;
 }
-
 .hero h1 {
   font-size: 3.2rem;
   font-weight: 800;
@@ -19,20 +17,18 @@ body {
   color: #ffffff;
   margin-bottom: 12px;
 }
-
 .hero .subtitle {
   font-size: 1.2rem;
   color: #888;
   margin-bottom: 40px;
 }
-
 .stats-row {
   display: flex;
   gap: 40px;
   flex-wrap: wrap;
   margin-top: 32px;
+  justify-content: center;
 }
-
 .stat-box {
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
@@ -40,14 +36,12 @@ body {
   padding: 20px 28px;
   min-width: 140px;
 }
-
 .stat-box .number {
   font-size: 2.4rem;
   font-weight: 700;
   color: #00f19f;
   line-height: 1;
 }
-
 .stat-box .label {
   font-size: 0.8rem;
   color: #666;
@@ -55,23 +49,19 @@ body {
   letter-spacing: 0.08em;
   margin-top: 6px;
 }
-
 /* ── Closeread section overrides ───────────────────────── */
 .cr-section {
   background-color: #0d0d0d !important;
 }
-
 /* Narrative text (left side) */
 .narrative-col {
   background-color: #0d0d0d !important;
   color: #e0e0e0 !important;
 }
-
 /* Sticky plot area (right side) */
 .sticky-col {
   background-color: #111111 !important;
 }
-
 /* Chapter/section headings */
 .cr-section h3 {
   font-size: 1.6rem;
@@ -81,7 +71,6 @@ body {
   border-left: 3px solid #00f19f;
   padding-left: 14px;
 }
-
 /* Narrative paragraphs */
 .narrative-col p {
   font-size: 1.05rem;
@@ -89,7 +78,6 @@ body {
   color: #cccccc;
   max-width: 480px;
 }
-
 /* Insight callout boxes */
 .insight {
   background: #1a1a1a;
@@ -100,7 +88,6 @@ body {
   font-size: 0.95rem;
   color: #aaaaaa;
 }
-
 .insight strong {
   color: #00f19f;
 }

@@ -1,0 +1,1 @@
+To begin, I wanted to replicate the WHOOP app design almost as if my application is an extension 

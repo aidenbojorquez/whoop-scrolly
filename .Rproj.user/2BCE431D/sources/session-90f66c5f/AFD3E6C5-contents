@@ -91,7 +91,7 @@ Workouts Logged
 
 ### Chart 1 · Your HRV Over a Year {.cr-narrative}
 
-HRV — heart rate variability is time of variation between heartbeats in milliseconds. A high HRV means your body is calm and ready for excercise. A low HRV means your body is still dealing with stress, hard training, or poor sleep. [@cr-hrv]
+HRV — heart rate variability is time of variation between heartbeats in milliseconds. A high HRV means your body is calm and ready for exercise. A low HRV means your body is still dealing with stress, hard training, or poor sleep. [@cr-hrv]
 
 ::: insight
 **Why it matters:** WHOOP gives you a recovery number, but HRV is the significant figure underneath it. Watching the trend over months reveals your fitness habits.
@@ -377,7 +377,15 @@ p_workout |>
 
 ### Chart 4 · Discover Trends {.cr-narrative}
 
-Pick any variable for X and Y — every dot is one day, colored by recovery zone. [@cr-explore]
+Pick any variable for X and Y — every dot is one day, colored by recovery zone.
+
+Try **HRV vs. Resting HR** — these two move in opposite directions when your body is stressed. Or **Sleep Debt vs. Recovery** to see how cumulative sleep loss compounds over time.
+
+::: insight
+**Where to start:** Set X to Sleep Debt and Y to HRV. A downward slope means the longer your debt builds, the harder your nervous system works to recover.
+:::
+
+Green dots should cluster toward the top-right of any meaningful pairing. Scattered dots mean those two variables don't predict each other — that's useful information too. [@cr-explore]
 
 
 
