@@ -593,82 +593,48 @@ plot_ly(
 
 ---
 
+
+---
+
 :::{.cr-section}
 
 ### Chart 6 · What Do I Need Tonight? {.cr-narrative}
 
-WHOOP tells you your recovery score after you wake up. This tool works the other way — enter what your body looked like today, and it tells you exactly how well you need to sleep tonight to wake up in the Green. [@cr-predict]
+WHOOP tells you your recovery score after you wake up. This tool works the other way — enter what your body looked like today, and it tells you exactly how many hours to sleep tonight to wake up in the Green. [@cr-predict]
 
 ::: insight
-**How it works:** A linear model trained on your 365 days of data solves backwards from your recovery target. Given your HRV and today's strain, it calculates the minimum sleep performance needed to hit each zone.
+**How it works:** A model trained on your 365 days solves backwards from your recovery target. Given your HRV and strain, it calculates the hours of sleep needed to hit each zone.
 :::
 
-Set your HRV from this morning and today's strain. Use this before bed to set a concrete sleep target — not a vague "sleep more" but an actual number. [@cr-predict]
+Set your HRV from this morning and today's strain. The output is a concrete sleep target — not a percentage, but hours and minutes. [@cr-predict]
 
 This is what WHOOP never tells you. [@cr-predict]
 
 :::{#cr-predict}
 ```{=html}
 <div style="background:#1a1a1a;border-radius:16px;padding:36px 40px;max-width:620px;margin:0 auto;font-family:Inter,sans-serif;">
-<div style="margin-bottom:28px;">
-<label style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;">This Morning's HRV (ms)</label>
-<div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
-<input type="range" id="hrv-slider" min="19" max="127" value="81" style="flex:1;accent-color:#00f19f;" oninput="calcSleep()">
-<span id="hrv-val" style="color:#00f19f;font-size:1.4rem;font-weight:700;min-width:48px;text-align:right;">81</span>
-</div></div>
-<div style="margin-bottom:36px;">
-<label style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;">Today's Strain</label>
-<div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
-<input type="range" id="strain-slider" min="1" max="21" value="14" step="0.1" style="flex:1;accent-color:#00f19f;" oninput="calcSleep()">
-<span id="strain-val" style="color:#00f19f;font-size:1.4rem;font-weight:700;min-width:48px;text-align:right;">14.0</span>
-</div></div>
-<div style="border-top:1px solid #2a2a2a;padding-top:28px;">
-<div style="font-size:0.75rem;color:#666;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:20px;text-align:center;">Sleep Performance Needed Tonight</div>
+<div style="margin-bottom:28px;"><label style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;">This Morning HRV (ms)</label><div style="display:flex;align-items:center;gap:16px;margin-top:8px;"><input type="range" id="hrv-slider" min="19" max="127" value="81" style="flex:1;accent-color:#00f19f;" oninput="calcSleep()"><span id="hrv-val" style="color:#00f19f;font-size:1.4rem;font-weight:700;min-width:48px;text-align:right;">81</span></div></div>
+<div style="margin-bottom:36px;"><label style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;">Today Strain</label><div style="display:flex;align-items:center;gap:16px;margin-top:8px;"><input type="range" id="strain-slider" min="1" max="21" value="14" step="0.1" style="flex:1;accent-color:#00f19f;" oninput="calcSleep()"><span id="strain-val" style="color:#00f19f;font-size:1.4rem;font-weight:700;min-width:48px;text-align:right;">14.0</span></div></div>
+<div style="border-top:1px solid #2a2a2a;padding-top:28px;"><div style="font-size:0.75rem;color:#666;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:20px;text-align:center;">Hours of Sleep Needed Tonight</div>
 <div style="display:flex;flex-direction:column;gap:14px;">
-<div style="display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;border-radius:10px;padding:14px 20px;border-left:4px solid #00f19f;">
-<span style="color:#00f19f;font-weight:600;font-size:0.95rem;">Green Zone (67%+ recovery)</span>
-<span id="green-sleep" style="color:#00f19f;font-size:1.5rem;font-weight:800;">82%</span>
+<div style="display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;border-radius:10px;padding:14px 20px;border-left:4px solid #00f19f;"><span style="color:#00f19f;font-weight:600;font-size:0.95rem;">Wake up Green (67%+ recovery)</span><span id="green-hrs" style="color:#00f19f;font-size:1.5rem;font-weight:800;">8h 12m</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;border-radius:10px;padding:14px 20px;border-left:4px solid #FFD166;"><span style="color:#FFD166;font-weight:600;font-size:0.95rem;">Stay Yellow (34%+ recovery)</span><span id="yellow-hrs" style="color:#FFD166;font-size:1.5rem;font-weight:800;">3h 50m</span></div>
 </div>
-<div style="display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;border-radius:10px;padding:14px 20px;border-left:4px solid #FFD166;">
-<span style="color:#FFD166;font-weight:600;font-size:0.95rem;">Yellow Zone (34%+ recovery)</span>
-<span id="yellow-sleep" style="color:#FFD166;font-size:1.5rem;font-weight:800;">38%</span>
-</div>
-<div style="display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;border-radius:10px;padding:14px 20px;border-left:4px solid #FF6B6B;">
-<span style="color:#FF6B6B;font-weight:600;font-size:0.95rem;">Avoid Red (stay above 34%)</span>
-<span id="red-sleep" style="color:#FF6B6B;font-size:1.5rem;font-weight:800;">38%</span>
-</div>
-</div>
-<div id="summary-text" style="margin-top:20px;text-align:center;font-size:0.9rem;color:#aaa;line-height:1.6;">
-With HRV 81 and strain 14, aim for 82% sleep performance tonight to wake up Green.
-</div>
+<div id="summary-text" style="margin-top:20px;text-align:center;font-size:0.95rem;color:#ccc;line-height:1.6;font-weight:500;">With HRV 81 and strain 14, sleep 8h 12m tonight to wake up Green.</div>
 </div></div>
 <script>
 function calcSleep(){
-var hrv=parseFloat(document.getElementById("hrv-slider").value);
-var strain=parseFloat(document.getElementById("strain-slider").value);
-document.getElementById("hrv-val").textContent=Math.round(hrv);
-document.getElementById("strain-val").textContent=strain.toFixed(1);
-var intercept=-38.73;
-var b_hrv=0.584;
-var b_sleep=0.749;
-var b_strain=-0.215;
-var base=intercept+(b_hrv*hrv)+(b_strain*strain);
-function sleepFor(target){
-var s=(target-base)/b_sleep;
-return Math.min(100,Math.max(9,Math.round(s)));
-}
-var greenSleep=sleepFor(67);
-var yellowSleep=sleepFor(34);
-document.getElementById("green-sleep").textContent=greenSleep+"%";
-document.getElementById("yellow-sleep").textContent=yellowSleep+"%";
-document.getElementById("red-sleep").textContent=yellowSleep+"%";
-var summary="";
-if(greenSleep<=100){
-summary="With HRV "+Math.round(hrv)+" and strain "+strain.toFixed(1)+", aim for "+greenSleep+"% sleep performance tonight to wake up Green.";
-}else{
-summary="With HRV "+Math.round(hrv)+" and strain "+strain.toFixed(1)+", hitting Green tonight is unlikely — focus on at least "+yellowSleep+"% to stay in Yellow.";
-}
-document.getElementById("summary-text").textContent=summary;
+var hrv=parseFloat(document.getElementById('hrv-slider').value);
+var strain=parseFloat(document.getElementById('strain-slider').value);
+document.getElementById('hrv-val').textContent=Math.round(hrv);
+document.getElementById('strain-val').textContent=strain.toFixed(1);
+var base=-38.73+(0.584*hrv)+(-0.215*strain);
+function hrsFor(target){var sp=(target-base)/0.749;sp=Math.min(100,Math.max(9,sp));var h=(sp-5.08)/9.77;return Math.max(0,h);}
+function fmt(h){var hh=Math.floor(h);var mm=Math.round((h-hh)*60);if(mm===60){hh++;mm=0;}return hh+'h '+mm+'m';}
+document.getElementById('green-hrs').textContent=fmt(hrsFor(67));
+document.getElementById('yellow-hrs').textContent=fmt(hrsFor(34));
+var g=hrsFor(67);var summary=g<=10?'With HRV '+Math.round(hrv)+' and strain '+strain.toFixed(1)+', sleep '+fmt(g)+' tonight to wake up Green.':'With HRV '+Math.round(hrv)+' and strain '+strain.toFixed(1)+', hitting Green is tough. Aim for at least '+fmt(hrsFor(34))+' to stay Yellow.';
+document.getElementById('summary-text').textContent=summary;
 }
 calcSleep();
 </script>
