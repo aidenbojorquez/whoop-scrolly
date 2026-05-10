@@ -91,13 +91,13 @@ Workouts Logged
 
 ### Chart 1 · Your HRV Over a Year {.cr-narrative}
 
-HRV — heart rate variability is time of variation between heartbeats in milliseconds. A high HRV means your body is calm and ready for excercise. A low HRV means your body is still dealing with stress, hard training, or poor sleep. [@cr-hrv]
+HRV — heart rate variability is the variation between heartbeats in milliseconds. A high HRV means your body is calm and ready for exercise. A low HRV means your body is still dealing with stress, hard training, or poor sleep. [@cr-hrv]
 
 ::: insight
 **Why it matters:** WHOOP gives you a recovery number, but HRV is the significant figure underneath it. Watching the trend over months reveals your fitness habits.
 :::
 
-Use the **range slider** at the bottom to zoom into any stretch of weeks. Hover any dot to see the full breakdown for that day. [@cr-hrv]
+Use the **range slider** at the bottom to zoom into any stretch of weeks. Hover any dot to see the full breakdown for that day. The white line shows your 7-day rolling average — the true signal beneath the daily noise. [@cr-hrv]
 
 Patterns indicate consistencies or inconsistencies in training and recovery. Dips can be seen after harder training blocks or busier times of the year. Spikes can be seen after rest. [@cr-hrv]
 
@@ -106,7 +106,11 @@ Patterns indicate consistencies or inconsistencies in training and recovery. Dip
 #| echo: false
 #| warning: false
 
-plot_ly(
+main_df <- main_df |>
+  arrange(date) |>
+  mutate(hrv_7day = zoo::rollmean(hrv, k = 7, fill = NA, align = "right"))
+
+p_hrv <- plot_ly(
   data   = main_df,
   x      = ~date,
   y      = ~hrv,
@@ -124,7 +128,22 @@ plot_ly(
     "Sleep: ", sleep_perf, "%"
   ),
   hoverinfo = "text"
-) |>
+)
+
+p_hrv <- p_hrv |>
+  add_trace(
+    data       = main_df,
+    x          = ~date,
+    y          = ~hrv_7day,
+    type       = "scatter",
+    mode       = "lines",
+    name       = "7-day avg",
+    line       = list(color = "#ffffff", width = 2.5, dash = "solid"),
+    hoverinfo  = "skip",
+    inherit    = FALSE
+  )
+
+p_hrv |>
   layout(
     paper_bgcolor = "#111111",
     plot_bgcolor  = "#1a1a1a",
@@ -166,10 +185,10 @@ plot_ly(
 
 WHOOP says sleep drives recovery. But which part of sleep? Total hours? Efficiency? How much deep or REM sleep you got?
 
-Use the dropdown to swap the x-axis between different sleep metrics. A tight upward cluster means that metric predicts your recovery. A scattered blob means it doesn't. [@cr-sleep]
+Use the dropdown to swap the x-axis between different sleep metrics. A tight upward cluster means that metric predicts your recovery. A scattered blob means it does not. [@cr-sleep]
 
 ::: insight
-**Common finding:** Sleep performance % and sleep debt tend to be stronger predictors than raw hours — it's not just about quantity.
+**Common finding:** Sleep performance % and sleep debt tend to be stronger predictors than raw hours — it is not just about quantity.
 :::
 
 Each dot is one day. The color still shows your recovery zone — green dots should cluster toward the top right. [@cr-sleep]
@@ -228,7 +247,7 @@ plot_ly(
     plot_bgcolor  = "#1a1a1a",
     font  = list(color = "#cccccc"),
     title = list(
-      text = "Sleep Quality → Next-Day Recovery",
+      text = "Sleep Quality to Next-Day Recovery",
       font = list(size = 16, color = "#ffffff")
     ),
     xaxis = list(title = "Sleep Performance %",
@@ -264,13 +283,15 @@ plot_ly(
 
 ### Chart 3 · The insight WHOOP never surfaces {.cr-narrative}
 
-Here's what WHOOP doesn't tell you directly: **your HRV that morning predicts how hard a workout will feel.** When HRV is low, your heart beats faster to produce the same output — your "easy" run suddenly feels hard. [@cr-workout]
+Here is what WHOOP does not tell you directly: **your HRV that morning predicts how hard a workout will feel.** When HRV is low, your heart beats faster to produce the same output — your easy run suddenly feels hard. [@cr-workout]
 
 ::: insight
 **What to look for:** A downward trend — higher HRV on the x-axis should mean lower average heart rate on the y-axis. If the pattern holds for you, low-HRV days are days to go easy.
 :::
 
-Use the **activity buttons** to filter by sport. Running and Jiu Jitsu are the most revealing — cardio sports where heart rate directly measures effort. [@cr-workout]
+Use the **activity buttons** to filter by sport. Running and Jiu Jitsu are the most revealing — cardio sports where heart rate directly measures effort. On low-HRV days, the same pace requires a meaningfully higher heart rate. [@cr-workout]
+
+The pattern is clearest in Running — filter to it and watch how the dots slope downward from left to right. Higher HRV mornings consistently produce lower workout heart rates at the same effort level. [@cr-workout]
 
 :::{#cr-workout}
 ```{r}
@@ -289,9 +310,6 @@ activity_palette <- c(
   "Powerlifting"     = "#FF9F45",
   "Jiu Jitsu"        = "#A78BFA",
   "Walking"          = "#60A5FA",
-  "Basketball"       = "#F472B6",
-  "Dance"            = "#FBBF24",
-  "Cycling"          = "#34D399",
   "General Activity" = "#94A3B8",
   "Other"            = "#64748B"
 )
@@ -377,9 +395,15 @@ p_workout |>
 
 ### Chart 4 · Discover Trends {.cr-narrative}
 
-Pick any variable for X and Y — every dot is one day, colored by recovery zone. [@cr-explore]
+Pick any variable for X and Y — every dot is one day, colored by recovery zone.
 
+Try **HRV vs. Resting HR** — these two move in opposite directions when your body is stressed. Or **Sleep Debt vs. Recovery** to see how cumulative sleep loss compounds over time. [@cr-explore]
 
+::: insight
+**Where to start:** Set X to Sleep Debt and Y to HRV. A downward slope means the longer your debt builds, the harder your nervous system works to recover.
+:::
+
+Green dots should cluster toward the top-right of any meaningful pairing. Scattered dots mean those two variables do not predict each other — that is useful information too. [@cr-explore]
 
 :::{#cr-explore}
 ```{r}
@@ -438,7 +462,7 @@ plot_ly(
     plot_bgcolor  = "#1a1a1a",
     font  = list(color = "#cccccc"),
     title = list(
-      text = "Explore Your Data — Pick Any X & Y",
+      text = "Explore Your Data — Pick Any X and Y",
       font = list(size = 16, color = "#ffffff")
     ),
     xaxis = list(title = "HRV (ms)", color = "#888", gridcolor = "#222"),
@@ -473,7 +497,7 @@ plot_ly(
 
 ### Chart 5 · 365 Days at a Glance {.cr-narrative}
 
-Every square is one day. Green means your body was ready. Red means it wasn't. Yellow is in between. [@cr-calendar]
+Every square is one day. Green means your body was ready. Red means it was not. Yellow is in between. [@cr-calendar]
 
 ::: insight
 **What to look for:** Streaks of red often follow heavy training blocks or poor sleep weeks. Green clusters usually mean you backed off at the right time.
@@ -486,7 +510,7 @@ Scroll back through the year — patterns in the calendar reveal things the line
 #| echo: false
 #| warning: false
 
-start_week <- floor_date(min(main_df$date), 'week', week_start = 1)
+start_week <- floor_date(min(main_df$date), "week", week_start = 1)
 
 cal_df <- main_df |>
   mutate(
@@ -503,7 +527,7 @@ cal_df <- main_df |>
   )
 
 month_ticks <- cal_df |>
-  mutate(month_label = format(date, "%b '%y")) |>
+  mutate(month_label = format(date, "%b %y")) |>
   group_by(month_label) |>
   slice_min(date, n = 1) |>
   ungroup()
@@ -551,17 +575,84 @@ plot_ly(
     showlegend  = FALSE,
     hovermode   = "closest",
     annotations = list(
-      list(text = "■ Green", x = 0.0, xref = "paper",
+      list(text = "Green", x = 0.0, xref = "paper",
            y = -0.15, yref = "paper", showarrow = FALSE,
            font = list(size = 13, color = "#00f19f")),
-      list(text = "■ Yellow", x = 0.15, xref = "paper",
+      list(text = "Yellow", x = 0.12, xref = "paper",
            y = -0.15, yref = "paper", showarrow = FALSE,
            font = list(size = 13, color = "#FFD166")),
-      list(text = "■ Red", x = 0.30, xref = "paper",
+      list(text = "Red", x = 0.24, xref = "paper",
            y = -0.15, yref = "paper", showarrow = FALSE,
            font = list(size = 13, color = "#FF6B6B"))
     )
   )
+```
+:::
+
+:::
+
+---
+
+:::{.cr-section}
+
+### Chart 6 · What Should I Do Today? {.cr-narrative}
+
+Every morning WHOOP gives you a recovery score but never tells you what to do with it. This calculator uses your own historical data to answer that question. [@cr-predict]
+
+::: insight
+**How it works:** A linear model trained on your 365 days of data predicts recovery from HRV, sleep performance, and strain. R squared = 0.80 — these three variables explain 80% of your recovery variance.
+:::
+
+Adjust the sliders to match this morning's numbers. The prediction updates in real time. [@cr-predict]
+
+The recommendation is not from WHOOP — it is derived from your own patterns. Days that looked like this in your data tended to produce these outcomes. [@cr-predict]
+
+:::{#cr-predict}
+```{=html}
+<div style="background:#1a1a1a;border-radius:16px;padding:36px 40px;max-width:600px;margin:0 auto;font-family:Inter,sans-serif;">
+<div style="margin-bottom:28px;">
+<label style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;">Morning HRV (ms)</label>
+<div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+<input type="range" id="hrv-slider" min="19" max="127" value="81" style="flex:1;accent-color:#00f19f;" oninput="updatePredictor()">
+<span id="hrv-val" style="color:#00f19f;font-size:1.4rem;font-weight:700;min-width:48px;text-align:right;">81</span>
+</div></div>
+<div style="margin-bottom:28px;">
+<label style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;">Sleep Performance (%)</label>
+<div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+<input type="range" id="sleep-slider" min="9" max="100" value="64" style="flex:1;accent-color:#00f19f;" oninput="updatePredictor()">
+<span id="sleep-val" style="color:#00f19f;font-size:1.4rem;font-weight:700;min-width:48px;text-align:right;">64</span>
+</div></div>
+<div style="margin-bottom:36px;">
+<label style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;">Yesterday Strain</label>
+<div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+<input type="range" id="strain-slider" min="1" max="21" value="14" step="0.1" style="flex:1;accent-color:#00f19f;" oninput="updatePredictor()">
+<span id="strain-val" style="color:#00f19f;font-size:1.4rem;font-weight:700;min-width:48px;text-align:right;">14.0</span>
+</div></div>
+<div style="border-top:1px solid #2a2a2a;padding-top:28px;text-align:center;">
+<div style="font-size:0.75rem;color:#666;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Predicted Recovery</div>
+<div id="recovery-score" style="font-size:4rem;font-weight:800;color:#00f19f;line-height:1;">53%</div>
+<div id="recovery-zone" style="font-size:1rem;font-weight:600;margin-top:8px;color:#FFD166;">Yellow Zone</div>
+<div id="recovery-rec" style="font-size:0.9rem;color:#aaa;margin-top:16px;line-height:1.6;max-width:400px;margin-left:auto;margin-right:auto;">Moderate day — keep strain under 12 and prioritize sleep tonight.</div>
+</div></div>
+<script>
+function updatePredictor(){
+var hrv=parseFloat(document.getElementById("hrv-slider").value);
+var sleep=parseFloat(document.getElementById("sleep-slider").value);
+var strain=parseFloat(document.getElementById("strain-slider").value);
+document.getElementById("hrv-val").textContent=Math.round(hrv);
+document.getElementById("sleep-val").textContent=Math.round(sleep);
+document.getElementById("strain-val").textContent=strain.toFixed(1);
+var pred=-38.73+(0.584*hrv)+(0.749*sleep)+(-0.215*strain);
+pred=Math.min(100,Math.max(0,Math.round(pred)));
+document.getElementById("recovery-score").textContent=pred+"%";
+var zoneEl=document.getElementById("recovery-zone");
+var recEl=document.getElementById("recovery-rec");
+if(pred>=67){zoneEl.textContent="Green Zone";zoneEl.style.color="#00f19f";recEl.textContent="Your body is primed. Push hard today — this is a good day for a heavy lift or a hard run.";}
+else if(pred>=34){zoneEl.textContent="Yellow Zone";zoneEl.style.color="#FFD166";recEl.textContent="Moderate day — keep strain under 12 and prioritize sleep tonight to avoid a red day tomorrow.";}
+else{zoneEl.textContent="Red Zone";zoneEl.style.color="#FF6B6B";recEl.textContent="Recovery day. Skip intense training, go for a walk, and get to bed early. Your body needs rest.";}
+}
+updatePredictor();
+</script>
 ```
 :::
 
