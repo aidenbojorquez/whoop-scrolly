@@ -79,19 +79,18 @@ workouts_clean <- workouts |>
   mutate(
     date = as_date(cycle_start),
     
-    # Group activities into cleaner categories
-    # str_detect() checks if the activity name contains a keyword
+    # Group activities into cleaner categories.
+    # Cycling (3), Basketball (6), and Dance (8) have too few
+    # sessions to draw conclusions — binned into Other.
+    # Threshold: fewer than 20 sessions = Other.
     activity_clean = case_when(
-      activity == "Running"      ~ "Running",
-      activity == "Weightlifting"~ "Weightlifting",
-      activity == "Powerlifting" ~ "Powerlifting",
-      activity == "Jiu Jitsu"    ~ "Jiu Jitsu",
-      activity == "Walking"      ~ "Walking",
-      activity == "Basketball"   ~ "Basketball",
-      activity == "Dance"        ~ "Dance",
-      activity == "Cycling"      ~ "Cycling",
-      activity == "Activity"     ~ "General Activity",
-      TRUE                       ~ "Other"  # anything else
+      activity == "Running"       ~ "Running",
+      activity == "Weightlifting" ~ "Weightlifting",
+      activity == "Powerlifting"  ~ "Powerlifting",
+      activity == "Jiu Jitsu"     ~ "Jiu Jitsu",
+      activity == "Walking"       ~ "Walking",
+      activity == "Activity"      ~ "General Activity",
+      TRUE                        ~ "Other"
     )
   ) |>
   filter(!is.na(avg_hr))  # drop rows with no heart rate data
@@ -119,3 +118,4 @@ cat("Days tracked:", nrow(main_df), "\n")
 cat("Workouts logged:", nrow(workouts_clean), "\n")
 cat("Date range:", as.character(min(main_df$date)),
     "→", as.character(max(main_df$date)), "\n")
+
